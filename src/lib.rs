@@ -1,23 +1,33 @@
 use std::thread;
-
+use std::sync::{Arc, mpsc};
+use std::sync::Mutex;
 
 pub struct ThreadPool{
     operators:Vec<Operator>,
+    send:mpsc::Sender<Mission>
 }
+
+struct Mission;
+type Mission = Box<dyn FnOnce()+Send+'static>;
+
 
 impl ThreadPool {
     pub fn new(size:usize)->ThreadPool{
         assert!(size>0);
+
+        let (sender,receiver) = mpsc::channel();
+        let receiver = Arc::new(Mutex::new(receiver));
         let mut operators = Vec::with_capacity(size);
         for id in 0..size {
-            operators.push(Operator::new(id))
+            operators.push(Operator::new(id,Arc::clone(&receiver)))
         }
-        ThreadPool{operators}
+        ThreadPool{operators, send: sender}
     }
 
     pub fn execute<F>(&self, f:F)
     where F: FnOnce()+ Send + 'static,{
-
+        let mission = Box::new(f);
+        self.send.send(mission).unwrap()
     }
 }
 
@@ -27,8 +37,11 @@ struct Operator{
 }
 
 impl Operator {
-    fn new(id:usize)->Operator{
-        let task = thread::spawn(||{});
-        Operator{id, task}
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Mission>>>) -> Operator {
+        let task = thread::spawn(|| {
+            receiver;
+        });
+
+        Operator { id, task }
     }
 }
