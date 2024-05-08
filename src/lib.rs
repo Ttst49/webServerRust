@@ -30,9 +30,20 @@ impl ThreadPool {
     }
 }
 
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        for operator in &mut self.operators {
+            println!("Stopping operation {}",operator.id);
+            if let Some(task) = operator.task.take(){
+                task.join().unwrap();
+            }
+        }
+    }
+}
+
 struct Operator{
     id:usize,
-    task:thread::JoinHandle<()>
+    task:Option<thread::JoinHandle<()>>
 }
 
 impl Operator {
@@ -44,6 +55,6 @@ impl Operator {
             mission();
         });
 
-        Operator { id, task }
+        Operator { id, task:Some(task) }
     }
 }
