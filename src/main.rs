@@ -19,21 +19,14 @@ fn manage_connection(mut flow:TcpStream){
     flow.read(&mut buffer).unwrap();
 
     let get = b"GET / HTTP/1.1\r\n";
-    
-    if buffer.starts_with(get) {
-        let content = fs::read_to_string("../template/index.html").unwrap();
 
-        let response = format!(
-            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
-            content.len(),
-            content
-        );
-
-        flow.write(response.as_bytes()).unwrap();
-        flow.flush().unwrap();
+    let (line_status, file_name) = if buffer.starts_with(get) {
+        ("HTTP/1.1 200 OK", "./template/index.html")
     }else {
-        let line_status = "HTTP/1.1 404 NOT FOUND";
-        let content = fs::read_to_string("./template/404.html").unwrap();
+        ("HTTP/1.1 404 NOT FOUND", "./template/404.html")
+    };
+
+        let content = fs::read_to_string(file_name).unwrap();
 
         let response = format!(
             "{}\r\nContent-Length: {}\r\n\r\n{}",
@@ -44,6 +37,5 @@ fn manage_connection(mut flow:TcpStream){
 
         flow.write(response.as_bytes()).unwrap();
         flow.flush().unwrap();
-    }
-
 }
+
