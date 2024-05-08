@@ -7,7 +7,6 @@ pub struct ThreadPool{
     send:mpsc::Sender<Mission>
 }
 
-struct Mission;
 type Mission = Box<dyn FnOnce()+Send+'static>;
 
 
@@ -38,8 +37,11 @@ struct Operator{
 
 impl Operator {
     fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Mission>>>) -> Operator {
-        let task = thread::spawn(|| {
-            receiver;
+        let task = thread::spawn(move ||loop {
+            let mission = receiver.lock().unwrap().recv().unwrap();
+            println!("Operator {} got a mission ; it execute it.", id);
+
+            mission();
         });
 
         Operator { id, task }
