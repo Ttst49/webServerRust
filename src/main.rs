@@ -1,6 +1,7 @@
 use std::net::TcpListener;
 use std::io::prelude::*;
 use std::net::TcpStream;
+use std::fs;
 
 fn main() {
     let listener =
@@ -15,10 +16,15 @@ fn main() {
 
 fn manage_connection(mut flow:TcpStream){
     let mut buffer = [0;1024];
-
     flow.read(&mut buffer).unwrap();
 
-    let response = "HTTP/1.1 200 OK\r\n\r\n";
+    let content = fs::read_to_string("./src/index.html").unwrap();
+
+    let response = format!(
+        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+        content.len(),
+        content
+    );
 
     flow.write(response.as_bytes()).unwrap();
     flow.flush().unwrap();
