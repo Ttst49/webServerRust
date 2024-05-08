@@ -4,10 +4,12 @@ use std::net::TcpStream;
 use std::fs;
 use std::thread;
 use std::time::Duration;
+use webserverrust::TaskGroup;
+
 
 fn main() {
-    let listener =
-        TcpListener::bind("127.0.0.1:9999").unwrap();
+    let listener = TcpListener::bind("127.0.0.1:9999").unwrap();
+    let group = TaskGroup::new(4);
 
     for flow in listener.incoming() {
         let flow = flow.unwrap();
