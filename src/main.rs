@@ -18,5 +18,9 @@ fn manage_connection(mut flow:TcpStream){
 
     flow.read(&mut buffer).unwrap();
 
-    println!("Request :{}",String::from_utf8_lossy(&buffer[..]));
+    let response = "HTTP/1.1 200 OK\r\n\r\n";
+
+    flow.write(response.as_bytes()).unwrap();
+    flow.flush().unwrap();
+
 }
