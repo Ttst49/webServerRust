@@ -12,7 +12,10 @@ fn main() {
     for flow in listener.incoming() {
         let flow = flow.unwrap();
 
-        manage_connection(flow)
+        thread::spawn(||{
+            manage_connection(flow)
+
+        });
     }
 }
 
