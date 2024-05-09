@@ -11,13 +11,14 @@ fn main() {
     let listener = TcpListener::bind("127.0.0.1:9999").unwrap();
     let group = ThreadPool::new(4);
 
-    for flow in listener.incoming() {
+    for flow in listener.incoming().take(2) {
         let flow = flow.unwrap();
 
         group.execute(||{
             manage_connection(flow)
         });
     }
+    println!("Shutting down")
 }
 
 fn manage_connection(mut flow:TcpStream){
